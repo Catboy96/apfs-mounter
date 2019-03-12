@@ -1,0 +1,127 @@
+#!/bin/bash
+
+# check for hard drive exists
+if [ -f /dev/sda ]; then
+	echo "No hard drives found."
+	echo ""
+	read -n1 -r -p "Press any key to continue..."
+	exit 0
+fi
+
+# grant root access
+echo "Granting root access..."
+sudo echo ""
+
+# ask for drive size for choosing the right drive
+echo -n "Expected drive size in gigabyte: [180] "
+read expected_size
+if [ -z $expected_size ]; then
+	echo "Size must be specified."
+	exit 0
+fi
+
+# find drive by size
+echo -n "Finding specified drive... "
+for drive in $(ls /dev/sd?); do
+	size=$(sudo fdisk -l $drive | grep -o $expected_size )
+	if [ "$size" == "$expected_size" ]; then
+		found_drive="$drive"
+	fi
+done
+if [ ! -n $found_drive ]; then
+	echo "None."
+	echo "No drive found."
+	echo ""
+	read -n1 -r -p "Press any key to continue..."
+	exit 0
+else
+	echo $found_drive
+fi
+
+# check for a valid APFS volume, if valid, get the first volume name
+first_volume=$(sudo apfsutil $found_drive | grep -oP "(?<=Name:).*(?=\()" | head -1 | sed 's/^[ \t]*//g')
+if [ ! -n "$first_volume" ]; then
+	read -n1 -r -p "Press any key to continue..."
+	exit 0
+fi
+
+# ask for mount the first volume
+echo -n "Mount the first volume $first_volume? [Y/n]: "
+read mount_first_volume
+# mount the specified volume
+if [ "$mount_first_volume" == "n" ] || [ "$mount_first_volume" == "N" ]; then
+	echo "Volumes listed below:"
+	sudo apfsutil $found_drive
+	echo -n "Specify volume number: [0] "
+	read volume_number
+	if [ -z $volume_number ]; then
+		volume_number="0"
+	fi
+	line=$(($volume_number + 1))
+	volume_name=`sudo apfsutil $found_drive | grep -oP "(?<=Name:).*(?=\()" | sed "$line q;d" | sed 's/^[ \t]*//g' | sed 's/[ \t]*$//g'`
+	echo "Volume $volume_name is selected."
+	echo -n "Is selected volume encrypted? [y/N] "
+	read is_encrypted
+	if [ "$is_encrypted" == "y" ] || [ "$is_encrypted" == "Y" ]; then
+		echo -n "Specify password: "
+		read -s password
+		echo ""
+		if [ -z $password ]; then
+			echo "Password must be specified for encrypted volume."
+			exit 0
+		fi
+		# mount the specified volume with password
+		echo "Mounting $volume_name ... "
+		sudo mkdir -p "/media/$USER/$volume_name"
+		sudo chown $USER "/media/$USER/$volume_name"
+		sudo chown $USER $found_drive
+		apfs-fuse $found_drive "/media/$USER/$volume_name" -v $volume_number -r $password
+		echo "$volume_name is now mounted at /media/$USER/$volume_name ."
+		read -n1 -r -p "Press any key to continue..."
+		exit 0
+	else
+		# mount the specified volume
+		echo "Mounting $volume_name ... "
+		sudo mkdir -p "/media/$USER/$volume_name"
+		sudo chown $USER "/media/$USER/$volume_name"
+		sudo chown $USER $found_drive
+		apfs-fuse $found_drive "/media/$USER/$volume_name" -v $volume_number
+		echo "$volume_name is now mounted at /media/$USER/$volume_name ."
+		read -n1 -r -p "Press any key to continue..."
+		exit 0
+	fi
+fi
+
+# mount the first volume
+echo -n "Is selected volume encrypted? [y/N] "
+read is_encrypted
+if [ "$is_encrypted" == "y" ] || [ "$is_encrypted" == "Y" ]; then
+	echo -n "Specify password: "
+	read -s password
+	echo ""
+	if [ -z $password ]; then
+		echo "Password must be specified for encrypted volume."
+		exit 0
+	fi
+	# mount the first volume with password
+	echo "Mounting $first_volume ... "
+	sudo mkdir -p "/media/$USER/$first_volume"
+	sudo chown $USER "/media/$USER/$first_volume"
+	sudo chown $USER $found_drive
+	apfs-fuse $found_drive "/media/$USER/$first_volume" -r $password
+	echo $result
+	echo "$first_volume is now mounted at /media/$USER/$first_volume ."
+	read -n1 -r -p "Press any key to continue..."
+	exit 0
+else
+	# mount the first volume
+	echo "Mounting $first_volume ... "
+	sudo mkdir -p "/media/$USER/$first_volume"
+	sudo chown $USER "/media/$USER/$first_volume"
+	sudo chown $USER $found_drive
+	apfs-fuse $found_drive "/media/$USER/$first_volume"
+	echo "$first_volume is now mounted at /media/$USER/$first_volume ."
+	read -n1 -r -p "Press any key to continue..."
+	exit 0
+fi
+
