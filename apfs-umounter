@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [ ! -f ~/.apfs-volume ] || [ ! -f ~/.apfs-device ]; then
+	echo "No APFS volumes mounted."
+	echo ""
+	read -n1 -r -p "Press any key to continue..."
+	exit 0
+fi
+
+# grant root access
+echo "Granting root access..."
+sudo echo ""
+
+# check for mounted volumes list
+for (( i=1; i<=$(wc -l ~/.apfs-volume | grep -oe "[0-9]*"); i++ )); do
+	mount_path="$(sed "$i q;d" ~/.apfs-volume)"
+	mount_device="$(sed "$i q;d" ~/.apfs-device)"
+	echo -n "Unmount $mount_path? [Y/n] "
+	read choice
+	if [ "$choice" == "n" ] || [ "$choice" == "N" ]; then
+		continue
+	fi
+	echo "Unmounting $mount_path... "
+	sudo umount -v -n $mount_device >> /dev/null 2>&1
+	sudo rm -r "$mount_path"
+	echo ""
+	read -n1 -r -p "Press any key to continue..."
+	exit 0
+done
+

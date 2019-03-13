@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=APFS Mounter
+Comment=Mount APFS partition
+Exec=/home/catboy/.local/bin/apfs-mounter
+Icon=root-terminal-app
+Terminal=true
+Categories=Utility;Application;
+GenericName[en_US.UTF-8]=Mount APFS volume
+Name[en_US]=APFS Mounter
+Comment[en_US.UTF-8]=Mount APFS volume
