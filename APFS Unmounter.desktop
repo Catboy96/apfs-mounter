@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=APFS Unmounter
+Comment=Unmount APFS volume
+Exec=/home/catboy/.local/bin/apfs-umounter
+Icon=root-terminal-app
+Terminal=true
+Categories=Utility;Application;
+GenericName[en_US.UTF-8]=Unmount APFS volume
+Name[en_US]=APFS Unmounter
+Comment[en_US.UTF-8]=Unmount APFS volume
