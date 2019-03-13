@@ -14,4 +14,3 @@ A bash script work with apfs-fuse. It provide an easy way to mount APFS volumes.
   
 ## What's currently NOT working
 * Get an error when secified WRONG password for encrypted volumes. (`apfs-fuse` may freaked out and it just don't give any response)
-* Remove the directory for mounting after unmounted the volume. 
