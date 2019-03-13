@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # check for hard drive exists
-if [ -f /dev/sda ]; then
+if [ ! -e /dev/sda ]; then
 	echo "No hard drives found."
 	echo ""
 	read -n1 -r -p "Press any key to continue..."
@@ -60,76 +60,25 @@ if [ "$mount_first_volume" == "n" ] || [ "$mount_first_volume" == "N" ]; then
 	line=$(($volume_number + 1))
 	volume_name=`sudo apfsutil $found_drive | grep -oP "(?<=Name:).*(?=\()" | sed "$line q;d" | sed 's/^[ \t]*//g' | sed -e 's/ *$//g'`
 	echo "Volume $volume_name is selected."
-	echo -n "Is selected volume encrypted? [y/N] "
-	read is_encrypted
-	if [ "$is_encrypted" == "y" ] || [ "$is_encrypted" == "Y" ]; then
-		echo -n "Specify password: "
-		read -s password
-		echo ""
-		if [ -z $password ]; then
-			echo "Password must be specified for encrypted volume."
-			exit 0
-		fi
-		# mount the specified volume with password
-		echo "Mounting $volume_name ... "
-		sudo mkdir -p "/media/$USER/$volume_name"
-		sudo chown $USER "/media/$USER/$volume_name"
-		sudo chown $USER $found_drive
-		apfs-fuse $found_drive "/media/$USER/$volume_name" -v $volume_number -r $password
-		echo "$volume_name is now mounted at /media/$USER/$volume_name."
-		echo "\"/media/$USER/$volume_name\"" >> ~/.apfs-volume
-		echo $found_drive >> ~/.apfs-device
-		read -n1 -r -p "Press any key to continue..."
-		exit 0
-	else
-		# mount the specified volume
-		echo "Mounting $volume_name ... "
-		sudo mkdir -p "/media/$USER/$volume_name"
-		sudo chown $USER "/media/$USER/$volume_name"
-		sudo chown $USER $found_drive
-		apfs-fuse $found_drive "/media/$USER/$volume_name" -v $volume_number
-		echo "$volume_name is now mounted at /media/$USER/$volume_name."
-		echo "\"/media/$USER/$volume_name\"" >> ~/.apfs-volume
-		echo $found_drive >> ~/.apfs-device
-		read -n1 -r -p "Press any key to continue..."
-		exit 0
-	fi
+	echo "Mounting $volume_name ... "
+	sudo mkdir -p "/media/$USER/$volume_name"
+	sudo chown $USER "/media/$USER/$volume_name"
+	sudo chown $USER $found_drive
+	apfs-fuse $found_drive "/media/$USER/$volume_name" -v $volume_number
+	echo "$volume_name is now mounted at /media/$USER/$volume_name."
+	echo "/media/$USER/$volume_name" >> ~/.apfs-volume
+	read -n1 -r -p "Press any key to continue..."
+	exit 0
 fi
 
 # mount the first volume
-echo -n "Is selected volume encrypted? [y/N] "
-read is_encrypted
-if [ "$is_encrypted" == "y" ] || [ "$is_encrypted" == "Y" ]; then
-	echo -n "Specify password: "
-	read -s password
-	echo ""
-	if [ -z $password ]; then
-		echo "Password must be specified for encrypted volume."
-		exit 0
-	fi
-	# mount the first volume with password
-	echo "Mounting $first_volume ... "
-	sudo mkdir -p "/media/$USER/$first_volume"
-	sudo chown $USER "/media/$USER/$first_volume"
-	sudo chown $USER $found_drive
-	apfs-fuse $found_drive "/media/$USER/$first_volume" -r $password
-	echo $result
-	echo "$first_volume is now mounted at /media/$USER/$first_volume."
-	echo "\"/media/$USER/$first_volume\"" >> ~/.apfs-volume
-	echo $found_drive >> ~/.apfs-device
-	read -n1 -r -p "Press any key to continue..."
-	exit 0
-else
-	# mount the first volume
-	echo "Mounting $first_volume ... "
-	sudo mkdir -p "/media/$USER/$first_volume"
-	sudo chown $USER "/media/$USER/$first_volume"
-	sudo chown $USER $found_drive
-	apfs-fuse $found_drive "/media/$USER/$first_volume"
-	echo "$first_volume is now mounted at /media/$USER/$first_volume."
-	echo "\"/media/$USER/$first_volume\"" >> ~/.apfs-volume
-	echo $found_drive >> ~/.apfs-device
-	read -n1 -r -p "Press any key to continue..."
-	exit 0
-fi
+echo "Mounting $first_volume ... "
+sudo mkdir -p "/media/$USER/$first_volume"
+sudo chown $USER "/media/$USER/$first_volume"
+sudo chown $USER $found_drive
+apfs-fuse $found_drive "/media/$USER/$first_volume"
+echo "$first_volume is now mounted at /media/$USER/$first_volume."
+echo "/media/$USER/$first_volume" >> ~/.apfs-volume
+read -n1 -r -p "Press any key to continue..."
+exit 0
 

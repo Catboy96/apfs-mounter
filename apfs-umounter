@@ -1,6 +1,7 @@
 #!/bin/bash
 
-if [ ! -f ~/.apfs-volume ] || [ ! -f ~/.apfs-device ]; then
+# check if APFS volume log file exists or empty
+if [ ! -s ~/.apfs-volume ]; then
 	echo "No APFS volumes mounted."
 	echo ""
 	read -n1 -r -p "Press any key to continue..."
@@ -13,16 +14,16 @@ sudo echo ""
 
 # check for mounted volumes list
 for (( i=1; i<=$(wc -l ~/.apfs-volume | grep -oe "[0-9]*"); i++ )); do
-	mount_path="$(sed "$i q;d" ~/.apfs-volume)"
-	mount_device="$(sed "$i q;d" ~/.apfs-device)"
+	mount_path=$(sed "$i q;d" ~/.apfs-volume)
 	echo -n "Unmount $mount_path? [Y/n] "
 	read choice
 	if [ "$choice" == "n" ] || [ "$choice" == "N" ]; then
 		continue
 	fi
 	echo "Unmounting $mount_path... "
-	sudo umount -v -n $mount_device >> /dev/null 2>&1
+	sudo umount -v -n "$mount_path"
 	sudo rm -r "$mount_path"
+	sed -i "$i d" ~/.apfs-volume
 	echo ""
 	read -n1 -r -p "Press any key to continue..."
 	exit 0
